@@ -52,6 +52,8 @@ function addPost() {
     .then(post => {
         console.log('Post added:', post);
         loadPosts(); // Reload the posts after adding a new one
+        document.getElementById('post-title').value = "";
+        document.getElementById('post-content').value = "";
     })
     .catch(error => console.error('Error:', error));  // If an error occurs, log it to the console
 }

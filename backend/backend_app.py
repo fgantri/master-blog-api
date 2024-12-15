@@ -20,7 +20,11 @@ def get_id():
     Returns:
         int: The next unique blog post ID.
     """
-    return max(post["id"] for post in POSTS) + 1
+    try:
+        new_id = max(post["id"] for post in POSTS) + 1
+    except ValueError:
+        new_id = 0
+    return new_id
 
 
 def validate_required_fields(request_body, required_fields):
@@ -87,6 +91,29 @@ def handle_posts():
         POSTS.append(new_post)
         return jsonify(new_post), 201
     return jsonify(POSTS)
+
+
+@app.route('/api/posts/<int:post_id>', methods=['DELETE'])
+def handle_post(post_id):
+    """
+    Deletes a post by its ID from the global POSTS list.
+
+    Args:
+        post_id (int): The ID of the post to delete.
+
+    Returns:
+        Response:
+            - 200 with a success message if the post is deleted.
+            - 404 with an error message if the post is not found.
+    """
+    global POSTS
+    post_to_delete = next((post for post in POSTS if post["id"] == post_id), None)
+    if post_to_delete:
+        POSTS.remove(post_to_delete)
+        return jsonify({
+            "message": f"Post with id {post_id} has been deleted successfully."
+        }), 200
+    return jsonify({"error": f"Post with id {post_id} doesn't exist."}), 404
 
 
 if __name__ == '__main__':
