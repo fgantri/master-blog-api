@@ -93,23 +93,38 @@ def handle_posts():
     return jsonify(POSTS)
 
 
-@app.route('/api/posts/<int:post_id>', methods=['DELETE'])
+@app.route('/api/posts/<int:post_id>', methods=['PUT', 'DELETE'])
 def handle_post(post_id):
     """
-    Deletes a post by its ID from the global POSTS list.
+    Handles updating or deleting a post by its ID.
+
+    Depending on the HTTP method, this function either updates the fields
+    of an existing post (`PUT`) or deletes the post (`DELETE`) from the
+    global POSTS list.
 
     Args:
-        post_id (int): The ID of the post to delete.
+        post_id (int): The ID of the post to update or delete.
 
     Returns:
         Response:
-            - 200 with a success message if the post is deleted.
-            - 404 with an error message if the post is not found.
+            - `PUT`:
+                - 200 with the updated post if successful.
+                - 404 if the post is not found.
+            - `DELETE`:
+                - 200 with a success message if the post is deleted.
+                - 404 if the post is not found.
     """
     global POSTS
-    post_to_delete = next((post for post in POSTS if post["id"] == post_id), None)
-    if post_to_delete:
-        POSTS.remove(post_to_delete)
+    selected_post = next((post for post in POSTS if post["id"] == post_id), None)
+    if selected_post:
+        if request.method == 'PUT':
+            valid_updated_fields = {}
+            for key in request.get_json():
+                if key in ["title", "content"]:
+                    valid_updated_fields[key] = request.get_json()[key]
+            selected_post.update(valid_updated_fields)
+            return jsonify(selected_post), 200
+        POSTS.remove(selected_post)
         return jsonify({
             "message": f"Post with id {post_id} has been deleted successfully."
         }), 200
