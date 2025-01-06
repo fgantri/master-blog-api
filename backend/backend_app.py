@@ -131,5 +131,34 @@ def handle_post(post_id):
     return jsonify({"error": f"Post with id {post_id} doesn't exist."}), 404
 
 
+@app.route('/api/posts/search', methods=['GET'])
+def search_posts():
+    """
+    Search posts based on title and content query parameters.
+
+    This endpoint allows searching through posts by matching case-insensitive
+    substrings in either the title or content fields. If both title and content
+    parameters are provided, posts matching either condition will be returned.
+
+    Args:
+        title (str, optional): Substring to search for in post titles
+        content (str, optional): Substring to search for in post content
+
+    Returns:
+        json: List of post dictionaries that match the search criteria. Each post
+              contains 'title' and 'content' fields. Returns empty list if no
+              matches are found.
+    """
+    title = request.args.get('title')
+    content = request.args.get('content')
+
+    results = []
+    for post in POSTS:
+        if (title is not None and title.lower() in post['title'].lower() or
+                content is not None and content.lower() in post['content'].lower()):
+            results.append(post)
+    return jsonify(results), 200
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002, debug=True)
