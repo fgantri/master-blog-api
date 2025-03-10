@@ -64,6 +64,9 @@ def handle_posts():
     This route supports both GET and POST methods:
 
     - **GET**: Returns a list of all blog posts.
+      Optional query parameters:
+        - sort: Field to sort by ('title' or 'content')
+        - direction: Sort direction ('asc' or 'desc')
     - **POST**: Adds a new blog post. The request body must include
       "title" and "content" fields. If any required field is missing,
       an error response is returned with a 400 status code. If the post
@@ -72,7 +75,9 @@ def handle_posts():
       is returned.
 
     Returns:
-        - For GET: JSON response containing all blog posts.
+        - For GET: 
+          - JSON response containing all blog posts, optionally sorted.
+          - 400 if invalid sort parameters are provided.
         - For POST:
           - If successful, a JSON response with the new post and a
             201 status code.
@@ -90,6 +95,26 @@ def handle_posts():
         }
         POSTS.append(new_post)
         return jsonify(new_post), 201
+    
+    # GET method
+    # Get sorting parameters from query string
+    sort_field = request.args.get('sort')
+    sort_direction = request.args.get('direction')
+    
+    # Validate parameters if provided
+    if sort_field and sort_field not in ['title', 'content']:
+        return jsonify({"error": "Invalid sort field. Must be 'title' or 'content'."}), 400
+    
+    if sort_direction and sort_direction not in ['asc', 'desc']:
+        return jsonify({"error": "Invalid sort direction. Must be 'asc' or 'desc'."}), 400
+    
+    # If sort parameters are valid, sort the posts
+    if sort_field:
+        # Create a copy of POSTS to sort
+        sorted_posts = sorted(POSTS, key=lambda post: post[sort_field], reverse=(sort_direction == 'desc'))
+        return jsonify(sorted_posts)
+    
+    # If no sorting is requested, return posts in original order
     return jsonify(POSTS)
 
 
